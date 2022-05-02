@@ -91,9 +91,9 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
     
     for style in styles:
         if (style == "trend_arrow"):
-            show_trend_arrow = kwargs[arg]
+            show_trend_arrow = True
         elif (style == "hide_nonsig"):
-            hide_nonsig = kwargs[arg]
+            hide_nonsig = True
     drawnBrackets = [] # Store a quadruple for each drawn pvalue bracket,
                       # (x0, y0, x1, y1): 0 lower left corner, 1 upper right corner
 
