@@ -15,8 +15,11 @@ def DrawPvalueBracket(x0, x1, y, h, p, ax, renderer):
             (tbox.x0, tbox.y0, tbox.x1, tbox.y1)
     #print("hi", t.get_window_extent(renderer).transformed(ax.transData.inverted()))
     
-def FormatPString(fmt, pval):
-    return fmt%pval
+def FormatPString(fmt, pval, non_sig_fmt, significant_p):
+    if (pval < significant_p):
+        return fmt%pval
+    else:
+        return non_sig_fmt%pval
     
 # Test whether two boxes overlaps
 # where we also allow margin distance between two boxes
@@ -44,11 +47,11 @@ def BuildXCoord(x, y, hue, xOrder, hueOrder, data):
             xCoordRank[i] = i
             xCoordRankHeight.append(data.loc[data[x]==vx, y].max())
     else:    
-        block = 0.5 / len(hueOrder)
+        block = 0.8 / len(hueOrder)
         k = 0
         for i, vx in enumerate(xOrder):
             for j, vhue in enumerate(hueOrder):
-                coord = i - 0.25 + j * block
+                coord = i - 0.4 + (j + 0.5) * block 
                 xCoord[(vx, vhue)] = coord
                 xCoordRank[coord] = k
                 xCoordRankHeight.append(data.loc[(data[x]==vx) & (data[hue]==vhue), y].max())
@@ -56,7 +59,8 @@ def BuildXCoord(x, y, hue, xOrder, hueOrder, data):
     return xCoord, xCoordRank, xCoordRankHeight
 
 def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None, 
-                 hue_order = None, fmt = None, fig = None):
+                 hue_order = None, fmt = None, fig = None, adjust_func = None, 
+                 significant_p = 0.05, styles = []):
     # obtain the x coordinate for each x.
     xCoord, xCoordRank, xCoordRankHeight = BuildXCoord(x, y, hue, order, hue_order, data)
     
@@ -73,19 +77,37 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
         func = sp.stats.ranksums
     if (fmt == None):
         fmt = "%.2e"
+        
+    fmt_no_value = False    
+    if ("%" not in fmt):
+        fmt_no_value = True
+        
+    non_sig_fmt = fmt
+    if (fmt_no_value):
+        non_sig_fmt = "ns"
     
+    show_trend_arrow = False
+    hide_nonsig = False
+    
+    for style in styles:
+        if (style == "trend_arrow"):
+            show_trend_arrow = kwargs[arg]
+        elif (style == "hide_nonsig"):
+            hide_nonsig = kwargs[arg]
     drawnBrackets = [] # Store a quadruple for each drawn pvalue bracket,
                       # (x0, y0, x1, y1): 0 lower left corner, 1 upper right corner
-        
+
     renderer = fig.canvas.get_renderer()
     boxes = []
-    for i, p in enumerate(sorted(pairs, key=lambda p: (xCoord[p[0]], xCoord[p[1]]))):
+    drawed = False
+    for i, p in enumerate(sorted(pairs, key=lambda p: (min(xCoord[p[0]], xCoord[p[1]]), 
+                                                      max(xCoord[p[0]], xCoord[p[1]])))):
         if (hue == None):
             xv = data.loc[data[x] == p[0], y]
             yv = data.loc[data[x] == p[1], y]
         else:
             xv = data.loc[(data[x] == p[0][0]) & (data[hue] == p[0][1]), y]
-            xv = data.loc[(data[x] == p[1][0]) & (data[hue] == p[1][1]), y]
+            yv = data.loc[(data[x] == p[1][0]) & (data[hue] == p[1][1]), y]
         if (len(xv) == 0 or len(yv) == 0):
             continue
             
@@ -93,13 +115,12 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
         coord1 = max(xCoord[p[0]], xCoord[p[1]])
         rank0 = xCoordRank[coord0]
         rank1 = xCoordRank[coord1]
-        print(xCoordRankHeight)
         base = max(xCoordRankHeight[rank0:(rank1+1)]) + margin
-        
+
         pval = func(xv, yv)[1]
-        if (i >= 1):
+        if (len(drawnBrackets) > 0):
             # Check whether it overlaps with previous drawn rectangles
-            textSize = fontWidth * len(FormatPString(fmt, pval))
+            textSize = fontWidth * len(FormatPString(fmt, pval, non_sig_fmt, significant_p))
             start = min(coord0, (coord0 + coord1) / 2 - textSize / 2)
             end = max(coord1, (coord0 + coord1) / 2 + textSize / 2)
             while (True):
@@ -115,13 +136,24 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
                     base = newBase
                 else:
                     break
-                    
-        bracketRect, textRect = DrawPvalueBracket(coord0, coord1, base, h, 
-                          FormatPString(fmt, pval), ax, renderer)
-        # Use the first drawing to get some statistics about sizes
-        if (i == 0):
-            fontHeight = textRect[3] - textRect[1]
-            fontWidth = (textRect[2] - textRect[0]) / len(FormatPString(fmt, pval))
-        drawnBrackets.append(bracketRect)
-        drawnBrackets.append(textRect)
-	
+        #if (p[0][0] == 1):
+        #print(i, p, base, coord0, coord1)
+        if (pval < significant_p or not hide_nonsig):
+            bracketRect, textRect = DrawPvalueBracket(coord0, coord1, base, h, 
+                              FormatPString(fmt, pval, non_sig_fmt, significant_p), 
+                              ax, renderer)
+            # Use the first drawing to get some statistics about sizes
+            if (len(drawnBrackets) == 0):
+                fontHeight = textRect[3] - textRect[1]
+                fontWidth = (textRect[2] - textRect[0]) / \
+                        len(FormatPString(fmt, pval, non_sig_fmt, significant_p))
+            drawnBrackets.append(bracketRect)
+            drawnBrackets.append(textRect)
+        
+    # We may need to adjust the axis boundary
+    maxY = top
+    for box in drawnBrackets:
+        if (box[3] + h > maxY):
+            maxY = box[3] + h
+    if (maxY > top):
+        ax.set_ylim((bot, maxY))
