@@ -42,11 +42,11 @@ def BuildXCoord(x, y, hue, xOrder, hueOrder, data):
     xCoord = {}
     xCoordRank = {}
     xCoordRankHeight = []
-    if (xOrder == None):
+    if (xOrder is None):
         xOrder = data[x].unique()
-    if (hue != None and hueOrder == None):
+    if (hue != None and hueOrder is None):
         hueOrder = data[hue].unique()
-    if (hue == None):
+    if (hue is None):
         for i, vx in enumerate(xOrder):
             xCoord[vx] = i
             xCoordRank[i] = i
@@ -78,9 +78,9 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
     fontWidth = 0
     fontHeight = 0
     
-    if (func == None):
+    if (func is None):
         func = sp.stats.ranksums
-    if (fmt == None):
+    if (fmt is None):
         fmt = "%.2e"
         
     fmt_no_value = False    
@@ -109,7 +109,7 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
     drawed = False
     for i, p in enumerate(sorted(pairs, key=lambda p: (min(xCoord[p[0]], xCoord[p[1]]), 
                                                       max(xCoord[p[0]], xCoord[p[1]])))):
-        if (hue == None):
+        if (hue is None):
             xv = data.loc[data[x] == p[0], y]
             yv = data.loc[data[x] == p[1], y]
         else:
