@@ -39,7 +39,7 @@ AddPvalAnnot takes arguments like for user-defined features:
 See more examples in [dev.ipynb](https://github.com/mourisl/pvalannot/blob/main/dev.ipynb).
 
 ### Requirements
-+Python >= 3.6
-+seaborn >= 0.9
-+matplotlib >= 2.2.2
-+scipy >= 1.1.0
++ Python >= 3.6
++ seaborn >= 0.9
++ matplotlib >= 2.2.2
++ scipy >= 1.1.0
