@@ -36,7 +36,7 @@ AddPvalAnnot takes arguments like for user-defined features:
 + func: User-defined statistical function. The function takes two arguments arrays x, y. The function should return two numbers, first is statistical number (positive: x>y, negative: x<y) and test p-value. Default func=scipy.stats.ranksums() .
 + fmt: The format of p-value to show. This follows Python format string convention, for example fmt="%.2e" will output p-values in two digits scientific notation. 
 
-See more examples in dev.ipynb.
+See more examples in [dev.ipynb](https://github.com/mourisl/pvalannot/blob/main/dev.ipynb).
 
 ### Requirements
 +Python >= 3.6
