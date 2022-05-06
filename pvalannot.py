@@ -15,8 +15,13 @@ def DrawPvalueBracket(x0, x1, y, h, p, ax, renderer):
             (tbox.x0, tbox.y0, tbox.x1, tbox.y1)
     #print("hi", t.get_window_extent(renderer).transformed(ax.transData.inverted()))
     
-def FormatPString(fmt, pval, non_sig_fmt, significant_p):
+def FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles = None):
     if (pval < significant_p):
+        if ("trend_arrow" in styles):
+            if (stats < 0):
+                fmt += r" $\nearrow$"
+            else:
+                fmt += r" $\searrow$"
         return fmt%pval
     else:
         return non_sig_fmt%pval
@@ -60,7 +65,7 @@ def BuildXCoord(x, y, hue, xOrder, hueOrder, data):
 
 def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None, 
                  hue_order = None, fmt = None, fig = None, adjust_func = None, 
-                 significant_p = 0.05, styles = []):
+                 significant_p = 0.05, styles = None):
     # obtain the x coordinate for each x.
     xCoord, xCoordRank, xCoordRankHeight = BuildXCoord(x, y, hue, order, hue_order, data)
     
@@ -89,6 +94,8 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
     show_trend_arrow = False
     hide_nonsig = False
     
+    if (styles is None):
+        styles = []
     for style in styles:
         if (style == "trend_arrow"):
             show_trend_arrow = True
@@ -116,11 +123,15 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
         rank0 = xCoordRank[coord0]
         rank1 = xCoordRank[coord1]
         base = max(xCoordRankHeight[rank0:(rank1+1)]) + margin
-
-        pval = func(xv, yv)[1]
+        
+        if (xCoord[p[0]] < xCoord[p[1]]):
+            stats, pval = func(xv, yv)
+        else:
+            stats, pval = func(yv, xv)
+            
         if (len(drawnBrackets) > 0):
             # Check whether it overlaps with previous drawn rectangles
-            textSize = fontWidth * len(FormatPString(fmt, pval, non_sig_fmt, significant_p))
+            textSize = fontWidth * len(FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles))
             start = min(coord0, (coord0 + coord1) / 2 - textSize / 2)
             end = max(coord1, (coord0 + coord1) / 2 + textSize / 2)
             while (True):
@@ -140,13 +151,13 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
         #print(i, p, base, coord0, coord1)
         if (pval < significant_p or not hide_nonsig):
             bracketRect, textRect = DrawPvalueBracket(coord0, coord1, base, h, 
-                              FormatPString(fmt, pval, non_sig_fmt, significant_p), 
+                              FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles), 
                               ax, renderer)
             # Use the first drawing to get some statistics about sizes
             if (len(drawnBrackets) == 0):
                 fontHeight = textRect[3] - textRect[1]
                 fontWidth = (textRect[2] - textRect[0]) / \
-                        len(FormatPString(fmt, pval, non_sig_fmt, significant_p))
+                        len(FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles))
             drawnBrackets.append(bracketRect)
             drawnBrackets.append(textRect)
         
