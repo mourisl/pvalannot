@@ -2,7 +2,7 @@ pvalannot
 ======
 
 ### What is it?
-A Python package to add p-value annotations on plots generated with Seaborn. Inspired by the magnificent package [statannotations](https://github.com/trevismd/statannotations). The major feature of pvalannot is the support of user-input statistical function (default is Wilcoxon ranksum test) and user-defined p-value text format.
+A Python package to add p-value annotations on plots generated with Seaborn. Pvalannot is inspired by the magnificent package [statannotations](https://github.com/trevismd/statannotations). The major feature of pvalannot is the support of user-input statistical function (default is Wilcoxon ranksum test) and user-defined p-value text format.
 
 ### Installation
 
