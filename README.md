@@ -2,7 +2,7 @@ pvalannot
 ======
 
 ### What is it?
-A Python package to add p-value annotations on plots generated with Seaborn. Inspired by the magnificent package [statannotations](https://github.com/trevismd/statannotations). The major feature of pvalannot is the support of user-input statistical function (default is Wilcoxon ranksum test) and user-defined p-value text format.
+A Python package to add p-value annotations on plots generated with Seaborn. Pvalannot is inspired by the magnificent package [statannotations](https://github.com/trevismd/statannotations). The major feature of pvalannot is the support of user-input statistical function (default is Wilcoxon ranksum test) and user-defined p-value text format.
 
 ### Installation
 
@@ -31,7 +31,7 @@ pairs=[("Thur", "Fri"), ("Thur", "Sat"), ("Fri", "Sun")]
 pvalannot.AddPvalAnnot(x=x, y=y, data=df, order=order, pairs=pairs, ax=ax, fig=fig)
 ```
 
-AddPvalAnnot takes arguments like for user-defined features:
+AddPvalAnnot takes arguments for user-defined features:
 
 + func: User-defined statistical function. The function takes two arguments arrays x, y. The function should return two numbers, first is statistical number (positive: x>y, negative: x<y) and test p-value. Default func=scipy.stats.ranksums .
 + fmt: The format of p-value to show. This follows Python format string convention, for example fmt="%.2e" will output p-values in two digits scientific notation. 
