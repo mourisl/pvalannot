@@ -65,7 +65,7 @@ def BuildXCoord(x, y, hue, xOrder, hueOrder, data):
 
 def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None, 
                  hue_order = None, fmt = None, fig = None, adjust_func = None, 
-                 significant_p = 0.05, styles = None):
+                 significant_p = 0.05, styles = None, func_args = None):
     # obtain the x coordinate for each x.
     xCoord, xCoordRank, xCoordRankHeight = BuildXCoord(x, y, hue, order, hue_order, data)
     
@@ -80,6 +80,8 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
     
     if (func is None):
         func = sp.stats.ranksums
+    if (func_args is None):
+        func_args = {}
     if (fmt is None):
         fmt = "%.2e"
         
@@ -123,11 +125,11 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
         rank0 = xCoordRank[coord0]
         rank1 = xCoordRank[coord1]
         base = max(xCoordRankHeight[rank0:(rank1+1)]) + margin
-        
+    
         if (xCoord[p[0]] < xCoord[p[1]]):
-            stats, pval = func(xv, yv)
+            stats, pval = func(xv, yv, **func_args)
         else:
-            stats, pval = func(yv, xv)
+            stats, pval = func(yv, xv, **func_args)
             
         if (len(drawnBrackets) > 0):
             # Check whether it overlaps with previous drawn rectangles
