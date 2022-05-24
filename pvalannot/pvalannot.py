@@ -65,7 +65,8 @@ def BuildXCoord(x, y, hue, xOrder, hueOrder, data):
 
 def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None, 
                  hue_order = None, fmt = None, fig = None, adjust_func = None, 
-                 significant_p = 0.05, styles = None, func_args = None):
+                 pair_test_key = None, significant_p = 0.05, styles = None, 
+                 func_args = None):
     # obtain the x coordinate for each x.
     xCoord, xCoordRank, xCoordRankHeight = BuildXCoord(x, y, hue, order, hue_order, data)
     
@@ -111,12 +112,27 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
     drawed = False
     for i, p in enumerate(sorted(pairs, key=lambda p: (min(xCoord[p[0]], xCoord[p[1]]), 
                                                       max(xCoord[p[0]], xCoord[p[1]])))):
+        # Here x, y stands for the cateogry of pair[0] and pair[1]
+        xSubDf = []
+        ySubDf = []
         if (hue is None):
-            xv = data.loc[data[x] == p[0], y]
-            yv = data.loc[data[x] == p[1], y]
+            xSubDf = data.loc[data[x] == p[0]]
+            ySubDf = data.loc[data[x] == p[1]]
         else:
-            xv = data.loc[(data[x] == p[0][0]) & (data[hue] == p[0][1]), y]
-            yv = data.loc[(data[x] == p[1][0]) & (data[hue] == p[1][1]), y]
+            xSubDf = data.loc[(data[x] == p[0][0]) & (data[hue] == p[0][1])]
+            ySubDf = data.loc[(data[x] == p[1][0]) & (data[hue] == p[1][1])]
+            
+        xv = []
+        yv = []
+        if (pair_test_key is None):
+            xv = xSubDf[y]
+            yv = ySubDf[y]
+        else: # paired test
+            joinedDf = xSubDf.set_index(pair_test_key).join(ySubDf.set_index(pair_test_key), 
+                lsuffix = "_0", rsuffix = "_1").dropna(subset = [str(y) + "_0", str(y) + "_1"])
+            xv = joinedDf[str(y) + "_0"]
+            yv = joinedDf[str(y) + "_1"]
+           
         if (len(xv) == 0 or len(yv) == 0):
             continue
             
