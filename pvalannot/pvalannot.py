@@ -19,9 +19,9 @@ def FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles = None):
     if (pval < significant_p):
         if ("trend_arrow" in styles):
             if (stats < 0):
-                fmt += r" $\nearrow$"
-            else:
                 fmt += r" $\searrow$"
+            else:
+                fmt += r" $\nearrow$"
         return fmt%pval
     else:
         return non_sig_fmt%pval
@@ -80,7 +80,7 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
     fontHeight = 0
     
     if (func is None):
-        func = sp.stats.ranksums
+        func = sp.stats.mannwhitneyu
     if (func_args is None):
         func_args = {}
     if (fmt is None):
