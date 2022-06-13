@@ -64,7 +64,7 @@ def BuildXCoord(x, y, hue, xOrder, hueOrder, data):
     return xCoord, xCoordRank, xCoordRankHeight
 
 def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None, 
-                 hue_order = None, fmt = None, fig = None, adjust_func = None, 
+                 hue_order = None, fmt = None, fig = None, padjust_func = None, 
                  pair_test_key = None, significant_p = 0.05, styles = None, 
                  func_args = None):
     # obtain the x coordinate for each x.
@@ -110,6 +110,8 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
     renderer = fig.canvas.get_renderer()
     boxes = []
     drawed = False
+    statsList = []
+    pvalList = []
     for i, p in enumerate(sorted(pairs, key=lambda p: (min(xCoord[p[0]], xCoord[p[1]]), 
                                                       max(xCoord[p[0]], xCoord[p[1]])))):
         # Here x, y stands for the cateogry of pair[0] and pair[1]
@@ -134,19 +136,32 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
             yv = joinedDf[str(y) + "_1"]
            
         if (len(xv) == 0 or len(yv) == 0):
+            pvalList.append(-1)
+            statsList.append(-1)
             continue
-            
+        
+        if (xCoord[p[0]] < xCoord[p[1]]):
+            stats, pval = func(xv, yv, **func_args)
+        else:
+            stats, pval = func(yv, xv, **func_args)
+        pvalList.append(pval)
+        statsList.append(stats)
+    
+    if (padjust_func is not None):
+        pvalList = padjust_func(pvalList)
+
+    for i, p in enumerate(sorted(pairs, key=lambda p: (min(xCoord[p[0]], xCoord[p[1]]), 
+                                                      max(xCoord[p[0]], xCoord[p[1]])))):
+        if (pvalList[i] == -1):
+            continue
+        stats = statsList[i]
+        pval = pvalList[i]
         coord0 = min(xCoord[p[0]], xCoord[p[1]])
         coord1 = max(xCoord[p[0]], xCoord[p[1]])
         rank0 = xCoordRank[coord0]
         rank1 = xCoordRank[coord1]
         base = max(xCoordRankHeight[rank0:(rank1+1)]) + margin
-    
-        if (xCoord[p[0]] < xCoord[p[1]]):
-            stats, pval = func(xv, yv, **func_args)
-        else:
-            stats, pval = func(yv, xv, **func_args)
-            
+        
         if (len(drawnBrackets) > 0):
             # Check whether it overlaps with previous drawn rectangles
             textSize = fontWidth * len(FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles))
