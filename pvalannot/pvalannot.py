@@ -148,7 +148,17 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
         statsList.append(stats)
     
     if (padjust_func is not None):
-        pvalList = padjust_func(pvalList)
+        tmpList = []
+        for p in pvalList:
+            if (p != -1):
+                tmpList.append(p)
+        tmpList = padjust_func(tmpList)
+        k = 0
+        for i, p in enumerate(pvalList):
+            if (p != -1):
+                pvalList[i] = tmpList[k] 
+                k += 1
+                
 
     for i, p in enumerate(sorted(pairs, key=lambda p: (min(xCoord[p[0]], xCoord[p[1]]), 
                                                       max(xCoord[p[0]], xCoord[p[1]])))):
