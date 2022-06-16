@@ -4,9 +4,9 @@ import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sp
 
-def DrawPvalueBracket(x0, x1, y, h, p, ax, renderer):
+def DrawPvalueBracket(x0, x1, y, h, p, ax, renderer, textKwargs):
     ax.plot([x0, x0, x1, x1], [y, y+h, y+h, y], lw=1, color="black")
-    t = ax.text((x0+x1)/2, y+h, p, ha='center', va='bottom', color="black") 
+    t = ax.text((x0+x1)/2, y+h, p, ha='center', va='bottom', color="black", **textKwargs) 
     #t = ax.annotate(text = p, xy=((x0+x1)/2, y+h))
     # return two boexes, one for brackett, one for text
     tbox = t.get_window_extent(renderer).transformed(ax.transData.inverted())
@@ -193,9 +193,12 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
         #if (p[0][0] == 1):
         #print(i, p, base, coord0, coord1)
         if (pval < significant_p or not hide_nonsig):
+            textKwargs = {}
+            if ("bold_significant" in styles and pval < significant_p):
+                textKwargs["fontweight"] = "bold"
             bracketRect, textRect = DrawPvalueBracket(coord0, coord1, base, h, 
                               FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles), 
-                              ax, renderer)
+                              ax, renderer, textKwargs)
             # Use the first drawing to get some statistics about sizes
             if (len(drawnBrackets) == 0):
                 fontHeight = textRect[3] - textRect[1]
