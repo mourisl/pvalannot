@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import scipy as sp
 
 def DrawPvalueBracket(x0, x1, y, h, p, ax, renderer, textKwargs):
-    ax.plot([x0, x0, x1, x1], [y, y+h, y+h, y], lw=1, color="black")
+    ax.plot([x0, x0, x1, x1], [y, y+h, y+h, y], lw=1, color="black", scalex=False)
     t = ax.text((x0+x1)/2, y+h, p, ha='center', va='bottom', color="black", **textKwargs) 
     #t = ax.annotate(text = p, xy=((x0+x1)/2, y+h))
     # return two boexes, one for brackett, one for text
