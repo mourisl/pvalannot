@@ -13,7 +13,6 @@ def DrawPvalueBracket(x0, x1, y, h, p, ax, renderer, textKwargs):
     #print(tbox)
     return (x0, y, x1, y + h), \
             (tbox.x0, tbox.y0, tbox.x1, tbox.y1)
-    #print("hi", t.get_window_extent(renderer).transformed(ax.transData.inverted()))
     
 def FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles = None):
     if (pval < significant_p):
@@ -178,12 +177,12 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
             start = min(coord0, (coord0 + coord1) / 2 - textSize / 2)
             end = max(coord1, (coord0 + coord1) / 2 + textSize / 2)
             while (True):
-                box = [start, base, end, base + h]
-                newBase = 0
+                box = [start, base, end, base + h + fontHeight]
+                newBase = base
                 overlapCount = 0
                 for prevBox in drawnBrackets:
                     if (BoxIntersect(box, prevBox, margin)):
-                        if (overlapCount == 0):
+                        if (prevBox[3] + margin > newBase):
                             newBase = prevBox[3] + margin
                         overlapCount += 1
                 if (overlapCount > 0):
