@@ -3,16 +3,20 @@ import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import scipy as sp
+import math
 
-def DrawPvalueBracket(x0, x1, y, h, p, ax, renderer, textKwargs):
+def DrawPvalueBracket(x0, x1, y, h, p, font_scale, ax, renderer, textKwargs):
     ax.plot([x0, x0, x1, x1], [y, y+h, y+h, y], lw=1, color="black", scalex=False)
-    t = ax.text((x0+x1)/2, y+h, p, ha='center', va='bottom', color="black", **textKwargs) 
+    t = ax.text((x0+x1)/2, y+h + h/2, p, ha='center', va='baseline', color="black", **textKwargs) 
     #t = ax.annotate(text = p, xy=((x0+x1)/2, y+h))
-    # return two boexes, one for brackett, one for text
+    # return two boexes, one for brackett, one for text, and the text object itself
+    if (font_scale != 1):
+        fontSize = t.get_fontsize()
+        t.set_fontsize(font_scale * fontSize)
+    
     tbox = t.get_window_extent(renderer).transformed(ax.transData.inverted())
-    #print(tbox)
     return (x0, y, x1, y + h), \
-            (tbox.x0, tbox.y0, tbox.x1, tbox.y1)
+            (tbox.x0, tbox.y0, tbox.x1, tbox.y1), t
     
 def FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles = None):
     if (pval < significant_p):
@@ -62,9 +66,9 @@ def BuildXCoord(x, y, hue, xOrder, hueOrder, data):
                 k += 1
     return xCoord, xCoordRank, xCoordRankHeight
 
-def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None, 
-                 hue_order = None, fmt = None, fig = None, padjust_func = None, 
-                 pair_test_key = None, significant_p = 0.05, styles = None, 
+def AddPvalAnnot(x, y, data, pairs, ax = None, hue = None, func = None, order = None, 
+                 hue_order = None, font_scale = 1, fmt = None, fig = None, padjust_func = None, 
+                 pair_test_key = None, significant_p = 0.05, margin=None, styles = None, 
                  func_args = None):
     # obtain the x coordinate for each x.
     xCoord, xCoordRank, xCoordRankHeight = BuildXCoord(x, y, hue, order, hue_order, data)
@@ -72,7 +76,8 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
     # Get some drawing parameter based on the axis and data size
     bot, top = ax.get_ylim()
     h = (top - bot) / 30
-    margin = h / 2
+    if (margin is None):
+        margin = h / 2
     
     # These parameters will be determined after drawing the first bracket
     fontWidth = 0
@@ -105,12 +110,15 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
             hide_nonsig = True
     drawnBrackets = [] # Store a quadruple for each drawn pvalue bracket,
                       # (x0, y0, x1, y1): 0 lower left corner, 1 upper right corner
-
+    
+    ax = ax or plt.gca()
+    fig = fig or ax.get_figure()
     renderer = fig.canvas.get_renderer()
     boxes = []
     drawed = False
     statsList = []
     pvalList = []
+    textList = []
     for i, p in enumerate(sorted(pairs, key=lambda p: (min(xCoord[p[0]], xCoord[p[1]]), 
                                                       max(xCoord[p[0]], xCoord[p[1]])))):
         # Here x, y stands for the cateogry of pair[0] and pair[1]
@@ -171,33 +179,35 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
         rank1 = xCoordRank[coord1]
         base = max(xCoordRankHeight[rank0:(rank1+1)]) + margin
         
-        if (len(drawnBrackets) > 0):
-            # Check whether it overlaps with previous drawn rectangles
-            textSize = fontWidth * len(FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles))
-            start = min(coord0, (coord0 + coord1) / 2 - textSize / 2)
-            end = max(coord1, (coord0 + coord1) / 2 + textSize / 2)
-            while (True):
-                box = [start, base, end, base + h + fontHeight]
-                newBase = base
-                overlapCount = 0
-                for prevBox in drawnBrackets:
-                    if (BoxIntersect(box, prevBox, margin)):
-                        if (prevBox[3] + margin > newBase):
-                            newBase = prevBox[3] + margin
-                        overlapCount += 1
-                if (overlapCount > 0):
-                    base = newBase
-                else:
-                    break
-        #if (p[0][0] == 1):
-        #print(i, p, base, coord0, coord1)
         if (pval < significant_p or not hide_nonsig):
+            finalBox = [0, 0, 0, 0]
+            if (len(drawnBrackets) > 0):
+                # Check whether it overlaps with previous drawn rectangles
+                textSize = fontWidth * (len(FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles))+0.5)
+                start = min(coord0, (coord0 + coord1) / 2 - textSize / 2)
+                end = max(coord1, (coord0 + coord1) / 2 + textSize / 2)
+                while (True):
+                    box = [start, base, end, base + h + fontHeight + h/2]
+                    newBase = base
+                    overlapCount = 0
+                    for prevBox in drawnBrackets:
+                        if (BoxIntersect(box, prevBox, margin)):
+                            if (prevBox[3] + margin > newBase):
+                                newBase = prevBox[3] + margin
+                            overlapCount += 1
+                    if (overlapCount > 0):
+                        base = newBase
+                    else:
+                        break
+                finalBox = [start, base, end, base + h + fontHeight]
+
             textKwargs = {}
             if ("bold_significant" in styles and pval < significant_p):
                 textKwargs["fontweight"] = "bold"
-            bracketRect, textRect = DrawPvalueBracket(coord0, coord1, base, h, 
-                              FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles), 
+            bracketRect, textRect, t = DrawPvalueBracket(coord0, coord1, base, h, 
+                              FormatPString(fmt, stats, pval, non_sig_fmt, significant_p, styles), font_scale, 
                               ax, renderer, textKwargs)
+            textList.append(t)
             # Use the first drawing to get some statistics about sizes
             if (len(drawnBrackets) == 0):
                 fontHeight = textRect[3] - textRect[1]
@@ -212,4 +222,11 @@ def AddPvalAnnot(x, y, data, pairs, ax, hue = None, func = None, order = None,
         if (box[3] + h > maxY):
             maxY = box[3] + h
     if (maxY > top):
-        ax.set_ylim((bot, maxY))
+        fontSize = textList[0].get_fontsize()
+        origTextBox = textList[0].get_window_extent(renderer).transformed(ax.transData.inverted())
+        ax.set(ylim=(bot, maxY))
+        newTextBox = textList[0].get_window_extent(renderer).transformed(ax.transData.inverted())
+        changeLimRescale = math.pow((origTextBox.y1 - origTextBox.y0)/(newTextBox.y1 - newTextBox.y0), 0.75)
+        [textList[i].set_fontsize(fontSize * changeLimRescale) for i in range(len(textList))]
+        #updatedTextBox = textList[0].get_window_extent(renderer).transformed(ax.transData.inverted())
+        #print(origTextBox, newTextBox, updatedTextBox, changeLimRescale)
