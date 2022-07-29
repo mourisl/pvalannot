@@ -191,7 +191,7 @@ def AddPvalAnnot(x, y, data, pairs = None, ax = None, hue = None, func = None, o
                 pvalList[i] = tmpList[k] 
                 k += 1
                 
-
+    ret = {}
     for i, p in enumerate(sorted(pairs, key=lambda p: (min(xCoord[p[0]], xCoord[p[1]]), 
                                                       max(xCoord[p[0]], xCoord[p[1]])))):
         if (pvalList[i] == -1):
@@ -203,7 +203,7 @@ def AddPvalAnnot(x, y, data, pairs = None, ax = None, hue = None, func = None, o
         rank0 = xCoordRank[coord0]
         rank1 = xCoordRank[coord1]
         base = max(xCoordRankHeight[rank0:(rank1+1)]) + margin
-        
+        ret[(p[0], p[1])] = (stats, pval)
         if (pval < significant_p or not hide_nonsig):
             finalBox = [0, 0, 0, 0]
             if (len(drawnBrackets) > 0):
@@ -255,3 +255,4 @@ def AddPvalAnnot(x, y, data, pairs = None, ax = None, hue = None, func = None, o
         [textList[i].set_fontsize(fontSize * changeLimRescale) for i in range(len(textList))]
         #updatedTextBox = textList[0].get_window_extent(renderer).transformed(ax.transData.inverted())
         #print(origTextBox, newTextBox, updatedTextBox, changeLimRescale)
+    return ret

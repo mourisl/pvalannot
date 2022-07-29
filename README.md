@@ -26,9 +26,8 @@ order = ['Sun', 'Thur', 'Fri', 'Sat']
 
 fig = plt.figure(figsize=(5, 5))
 ax = sns.boxplot(data=df, x=x, y=y, order=order)
-pairs=[("Thur", "Fri"), ("Thur", "Sat"), ("Fri", "Sun")]
 
-pvalannot.AddPvalAnnot(x=x, y=y, data=df, order=order, pairs=pairs, ax=ax, fig=fig)
+pvalannot.AddPvalAnnot(x=x, y=y, data=df, order=order, ax=ax, fig=fig)
 ```
 
 AddPvalAnnot takes arguments for user-defined features:
