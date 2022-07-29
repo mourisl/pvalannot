@@ -81,6 +81,11 @@ def AddPvalAnnot(x, y, data, pairs = None, ax = None, hue = None, func = None, o
                  hue_order = None, font_scale = 1, fmt = None, fig = None, padjust_func = None, 
                  pair_test_key = None, significant_p = 0.05, margin=None, styles = None, 
                  func_args = None):
+    # Get the canvas attributes.
+    ax = ax or plt.gca()
+    fig = fig or ax.get_figure()
+    renderer = fig.canvas.get_renderer()
+    
     # obtain the x coordinate for each x.
     xCoord, xCoordRank, xCoordRankHeight = BuildXCoord(x, y, hue, order, hue_order, data)
     
@@ -136,9 +141,6 @@ def AddPvalAnnot(x, y, data, pairs = None, ax = None, hue = None, func = None, o
                     for j in range(i + 1, len(vhue)):
                         pairs.append([(xitem, vhue[i]), (xitem, vhue[j])])                
     
-    ax = ax or plt.gca()
-    fig = fig or ax.get_figure()
-    renderer = fig.canvas.get_renderer()
     boxes = []
     drawed = False
     statsList = []

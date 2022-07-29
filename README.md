@@ -23,11 +23,9 @@ df = sns.load_dataset("tips")
 x = "day"
 y = "total_bill"
 order = ['Sun', 'Thur', 'Fri', 'Sat']
-
-fig = plt.figure(figsize=(5, 5))
 ax = sns.boxplot(data=df, x=x, y=y, order=order)
 
-pvalannot.AddPvalAnnot(x=x, y=y, data=df, order=order, ax=ax, fig=fig)
+pvalannot.AddPvalAnnot(x=x, y=y, data=df, order=order)
 ```
 
 AddPvalAnnot takes arguments for user-defined features:
