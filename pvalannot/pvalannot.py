@@ -15,6 +15,17 @@ def DrawPvalueBracket(x0, x1, y, h, p, font_scale, ax, renderer, textKwargs):
         t.set_fontsize(font_scale * fontSize)
     
     tbox = t.get_window_extent(renderer).transformed(ax.transData.inverted())
+    left, right = ax.get_xlim()
+    hmargin = (right - left) / 60
+    if (tbox.x0 < left + hmargin):
+        t.remove()
+        t = ax.text(left+hmargin, y+h + h/2, p, ha='left', va='baseline', color="black", **textKwargs) 
+        tbox = t.get_window_extent(renderer).transformed(ax.transData.inverted())
+    elif (tbox.x1 + hmargin > right):
+        t.remove()
+        t = ax.text(right - hmargin, y+h + h/2, p, ha='right', va='baseline', color="black", **textKwargs) 
+        tbox = t.get_window_extent(renderer).transformed(ax.transData.inverted())
+        
     return (x0, y, x1, y + h), \
             (tbox.x0, tbox.y0, tbox.x1, tbox.y1), t
     
@@ -66,7 +77,7 @@ def BuildXCoord(x, y, hue, xOrder, hueOrder, data):
                 k += 1
     return xCoord, xCoordRank, xCoordRankHeight
 
-def AddPvalAnnot(x, y, data, pairs, ax = None, hue = None, func = None, order = None, 
+def AddPvalAnnot(x, y, data, pairs = None, ax = None, hue = None, func = None, order = None, 
                  hue_order = None, font_scale = 1, fmt = None, fig = None, padjust_func = None, 
                  pair_test_key = None, significant_p = 0.05, margin=None, styles = None, 
                  func_args = None):
@@ -76,8 +87,7 @@ def AddPvalAnnot(x, y, data, pairs, ax = None, hue = None, func = None, order = 
     # Get some drawing parameter based on the axis and data size
     bot, top = ax.get_ylim()
     h = (top - bot) / 30
-    if (margin is None):
-        margin = h / 2
+    margin = margin or h / 2
     
     # These parameters will be determined after drawing the first bracket
     fontWidth = 0
@@ -110,6 +120,21 @@ def AddPvalAnnot(x, y, data, pairs, ax = None, hue = None, func = None, order = 
             hide_nonsig = True
     drawnBrackets = [] # Store a quadruple for each drawn pvalue bracket,
                       # (x0, y0, x1, y1): 0 lower left corner, 1 upper right corner
+    
+    # Infer our own pairss
+    if (pairs == None):
+        pairs = []
+        vx = data[x].unique()
+        if (hue is None):
+            for i in range(len(vx)):
+                for j in range(i + 1, len(vx)):
+                    pairs.append([vx[i], vx[j]])
+        else:
+            vhue = data[hue].unique()
+            for xitem in vx:
+                for i in range(len(vhue)):
+                    for j in range(i + 1, len(vhue)):
+                        pairs.append([(xitem, vhue[i]), (xitem, vhue[j])])                
     
     ax = ax or plt.gca()
     fig = fig or ax.get_figure()
