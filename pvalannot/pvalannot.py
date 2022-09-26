@@ -6,7 +6,7 @@ import scipy as sp
 import math
 
 def DrawPvalueBracket(x0, x1, y, h, p, font_scale, ax, renderer, textKwargs):
-    ax.plot([x0, x0, x1, x1], [y, y+h, y+h, y], lw=1, color="black", scalex=False)
+    ax.plot([x0, x0, x1, x1], [y, y+h, y+h, y], lw=1, color="black", scalex=False, clip_on=False)
     t = ax.text((x0+x1)/2, y+h + h/2, p, ha='center', va='baseline', color="black", **textKwargs) 
     #t = ax.annotate(text = p, xy=((x0+x1)/2, y+h))
     # return two boexes, one for brackett, one for text, and the text object itself
@@ -79,7 +79,7 @@ def BuildXCoord(x, y, hue, xOrder, hueOrder, data):
 
 def AddPvalAnnot(x, y, data, pairs = None, ax = None, hue = None, func = None, order = None, 
                  hue_order = None, font_scale = 1, fmt = None, fig = None, padjust_func = None, 
-                 pair_test_key = None, significant_p = 0.05, margin=None, styles = None, 
+                 pair_test_key = None, significant_p = 0.05, margin=None, styles = None, change_ylim=True,
                  func_args = None):
     # Get the canvas attributes.
     ax = ax or plt.gca()
@@ -248,13 +248,16 @@ def AddPvalAnnot(x, y, data, pairs = None, ax = None, hue = None, func = None, o
     for box in drawnBrackets:
         if (box[3] + h > maxY):
             maxY = box[3] + h
-    if (maxY > top):
-        fontSize = textList[0].get_fontsize()
-        origTextBox = textList[0].get_window_extent(renderer).transformed(ax.transData.inverted())
-        ax.set(ylim=(bot, maxY))
-        newTextBox = textList[0].get_window_extent(renderer).transformed(ax.transData.inverted())
-        changeLimRescale = math.pow((origTextBox.y1 - origTextBox.y0)/(newTextBox.y1 - newTextBox.y0), 0.75)
-        [textList[i].set_fontsize(fontSize * changeLimRescale) for i in range(len(textList))]
-        #updatedTextBox = textList[0].get_window_extent(renderer).transformed(ax.transData.inverted())
-        #print(origTextBox, newTextBox, updatedTextBox, changeLimRescale)
+    if (change_ylim):
+        if (maxY > top):
+            fontSize = textList[0].get_fontsize()
+            origTextBox = textList[0].get_window_extent(renderer).transformed(ax.transData.inverted())
+            ax.set(ylim=(bot, maxY))
+            newTextBox = textList[0].get_window_extent(renderer).transformed(ax.transData.inverted())
+            changeLimRescale = math.pow((origTextBox.y1 - origTextBox.y0)/(newTextBox.y1 - newTextBox.y0), 0.75)
+            [textList[i].set_fontsize(fontSize * changeLimRescale) for i in range(len(textList))]
+            #updatedTextBox = textList[0].get_window_extent(renderer).transformed(ax.transData.inverted())
+            #print(origTextBox, newTextBox, updatedTextBox, changeLimRescale)
+    else:
+        ax.set(ylim=(bot, top))
     return ret
