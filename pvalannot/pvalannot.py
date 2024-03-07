@@ -129,13 +129,13 @@ def AddPvalAnnot(x, y, data, pairs = None, ax = None, hue = None, func = None, o
     # Infer our own pairss
     if (pairs == None):
         pairs = []
-        vx = data[x].unique()
+        vx = order or data[x].unique()
         if (hue is None):
             for i in range(len(vx)):
                 for j in range(i + 1, len(vx)):
                     pairs.append([vx[i], vx[j]])
         else:
-            vhue = data[hue].unique()
+            vhue = hue_order or data[hue].unique()
             for xitem in vx:
                 for i in range(len(vhue)):
                     for j in range(i + 1, len(vhue)):
@@ -161,8 +161,8 @@ def AddPvalAnnot(x, y, data, pairs = None, ax = None, hue = None, func = None, o
         xv = []
         yv = []
         if (pair_test_key is None):
-            xv = xSubDf[y]
-            yv = ySubDf[y]
+            xv = xSubDf[y].dropna()
+            yv = ySubDf[y].dropna()
         else: # paired test
             joinedDf = xSubDf.set_index(pair_test_key).join(ySubDf.set_index(pair_test_key), 
                 lsuffix = "_0", rsuffix = "_1").dropna(subset = [str(y) + "_0", str(y) + "_1"])
