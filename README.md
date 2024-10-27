@@ -7,7 +7,7 @@ A Python package to add p-value annotations on plots generated with Seaborn. Pva
 ### Installation
 
 1. Clone the [GitHub repo](https://github.com/mourisl/pvalannot), e.g. with `git clone https://github.com/mourisl/pvalannot`.
-2. Copy "pvalannot" folder to your project folder.
+2. Copy "pvalannot" folder to your project folder or run "python3 setup.py install" to install..
 
 I will try to add pvalannot to PyPi in future.
 
